@@ -327,19 +327,6 @@ class SelectionTool extends Tool {
         }
     }
 
-    /** Binds class to 'click', 'mousedown', 'mouseup' */
-    bindEventListeners() {
-        this.canvas.addEventListener('click', this.clickListener.bind(this))
-        this.canvas.addEventListener('mousedown', this.mouseDownListener.bind(this))
-        this.canvas.addEventListener('mouseup', this.mouseUpListener.bind(this))
-    }
-
-    /** Unbinds class from 'click', 'mousedown', 'mouseup' */
-    unbindEventListeners() {
-        this.canvas.removeEventListener('click', this.clickListener.bind(this))
-        this.canvas.removeEventListener('mousedown', this.mouseDownListener.bind(this))
-        this.canvas.removeEventListener('mouseup', this.mouseUpListener.bind(this))
-    }
 }
 
 class LineTool extends Tool {
@@ -394,18 +381,6 @@ class LineTool extends Tool {
             this.line.points[1].copyPoint(this.getCursorPosition(e))
             this.line.draw()
         }
-    }
-
-    /** Binds class to 'click' and 'mousemove' */
-    bindEventListeners() {
-        this.canvas.addEventListener('click', this.clickListener.bind(this))
-        this.canvas.addEventListener('mousemove', this.mouseMoveListener.bind(this))
-    }
-
-    /** Unbinds class from 'click' and 'mousemove' */
-    unbindEventListeners() {
-        this.canvas.removeEventListener('click', this.clickListener.bind(this))
-        this.canvas.removeEventListener('mousemove', this.mouseMoveListener.bind(this))
     }
 
 }
@@ -475,20 +450,6 @@ class PolygonTool extends Tool {
             this.drawCanvas()
             this.resetTool()
         }
-    }
-
-    /** Binds class to 'click' and 'mousemove' */
-    bindEventListeners() {
-        this.canvas.addEventListener('click', this.clickListener.bind(this))
-        this.canvas.addEventListener('mousemove', this.mouseMoveListener.bind(this))
-        this.canvas.addEventListener('contextmenu', this.rightClickListener.bind(this))
-    }
-
-    /** Unbinds class from 'click' and 'mousemove' */
-    unbindEventListeners() {
-        this.canvas.removeEventListener('click', this.clickListener.bind(this))
-        this.canvas.removeEventListener('mousemove', this.mouseMoveListener.bind(this))
-        this.canvas.addEventListener('contextmenu', this.rightClickListener.bind(this))
     }
 
 }

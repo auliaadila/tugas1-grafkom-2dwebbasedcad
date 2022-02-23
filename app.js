@@ -40,8 +40,38 @@ const lineTool = new LineTool(canvas, gl, current)
 const polygonTool = new PolygonTool(canvas, gl, current)
 
 /**
- * Currently active tool
+ * Event listener tracker
+ * Event listeners are delicate things, they get special treatment
  */
+const eventListeners = {
+    list: [],
+    append(a) {
+        this.list.push(a)
+    },
+    clear() {
+        while (this.list.length > 0) {
+            this.list.pop()
+        }
+    },
+    addToCanvas() {
+        for (let a of this.list) {
+            canvas.addEventListener(a[0], a[1])
+        }
+    },
+    removeFromCanvas() {
+        for (let a of this.list) {
+            canvas.removeEventListener(a[0], a[1])
+        }
+    }
+}
+
+/**
+ * Set up selection tool as active tool
+ */
+eventListeners.append(['click', selectionTool.clickListener.bind(selectionTool)])
+eventListeners.append(['mousedown', selectionTool.mouseDownListener.bind(selectionTool)])
+eventListeners.append(['mouseup', selectionTool.mouseUpListener.bind(selectionTool)])
+eventListeners.addToCanvas()
 let currentTool = selectionTool
 
 /**
@@ -76,34 +106,44 @@ function setCanvasColor() {
  */
 function switchToSelectionTool() {
     if (!(currentTool instanceof SelectionTool)) {
-        currentTool.unbindEventListeners()
         currentTool.resetTool()
+        eventListeners.removeFromCanvas()
+        eventListeners.clear()
+        eventListeners.append(['click', selectionTool.clickListener.bind(selectionTool)])
+        eventListeners.append(['mousedown', selectionTool.mouseDownListener.bind(selectionTool)])
+        eventListeners.append(['mouseup', selectionTool.mouseUpListener.bind(selectionTool)])
+        eventListeners.addToCanvas()
         currentTool = selectionTool
-        currentTool.bindEventListeners()
     }
 }
 
 /**
  * Changes currentTool to lineTool
  */
- function switchToLineTool() {
+function switchToLineTool() {
     if (!(currentTool instanceof LineTool)) {
-        currentTool.unbindEventListeners()
         currentTool.resetTool()
+        eventListeners.removeFromCanvas()
+        eventListeners.clear()
+        eventListeners.append(['click', lineTool.clickListener.bind(lineTool)])
+        eventListeners.append(['mousemove', lineTool.mouseMoveListener.bind(lineTool)])
+        eventListeners.addToCanvas()
         currentTool = lineTool
-        currentTool.bindEventListeners()
     }
 }
 
 /**
  * Changes currentTool to polygonTool
  */
- function switchToPolygonTool() {
+function switchToPolygonTool() {
     if (!(currentTool instanceof PolygonTool)) {
-        currentTool.unbindEventListeners()
-        currentTool.resetTool()
+        eventListeners.removeFromCanvas()
+        eventListeners.clear()
+        eventListeners.append(['click', polygonTool.clickListener.bind(polygonTool)])
+        eventListeners.append(['mousemove', polygonTool.mouseMoveListener.bind(polygonTool)])
+        eventListeners.append(['contextmenu', polygonTool.rightClickListener.bind(polygonTool)])
+        eventListeners.addToCanvas()
         currentTool = polygonTool
-        currentTool.bindEventListeners()
     }
 }
 
