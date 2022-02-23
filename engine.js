@@ -1,4 +1,5 @@
 //Init
+/** @type {HTMLCanvasElement} */
 const canvas = document.getElementById("webgl-app");
 const gl = canvas.getContext("webgl2", { preserveDrawingBUffer: true });
 if (!gl) {
@@ -8,8 +9,8 @@ if (!gl) {
 //Prepare web GL engine
 function prepGL() {
   gl.viewport(0, 0, canvas.width, canvas.height);
-  gl.clearColor(1, 1, 1, 1);
-  gl.clear(gl.COLOR_BUFFER_BIT);
+  // gl.clearColor(1, 1, 1, 1);
+  // gl.clear(gl.COLOR_BUFFER_BIT);
 
   //define shaders
   const vert = `precision mediump float; 
@@ -74,19 +75,19 @@ function prepGL() {
 prepGL();
 
 //sample data
-const triangleData = [0.0, 0.0, 1.0, 0.0, 0.0, 1.0]; // xy xy xy
-const triangle = [
-  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0,
-];
+// const triangle = [
+//   0.0, 0.0, 0.0, 0.0, 0.0,
+//   0.0, 0.5, 0.0, 0.0, 0.0,
+//   0.5, 0.0, 0.0, 0.0, 0.0,
+// ];
 
 //binding data
 const vertBuf = gl.createBuffer(); //container buat nyimpen data (vertex+color)
 gl.bindBuffer(gl.ARRAY_BUFFER, vertBuf); //binding ke web gl
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangle), gl.STATIC_DRAW); //pas mau gambar
 
 //get attribute location
-var positionAttLoc = gl.getAttribLocation(program, "vertPos");
-var colorAttLoc = gl.getAttribLocation(program, "vertColor");
+let positionAttLoc = gl.getAttribLocation(program, "vertPos");
+let colorAttLoc = gl.getAttribLocation(program, "vertColor");
 
 // tell WebGL how to read raw data
 gl.vertexAttribPointer(
@@ -112,4 +113,5 @@ gl.enableVertexAttribArray(colorAttLoc);
 
 gl.useProgram(program);
 
-gl.drawArrays(gl.TRIANGLE_FAN, 0, 3);
+// gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangle), gl.STATIC_DRAW); //pas mau gambar
+// gl.drawArrays(gl.TRIANGLE_FAN, 0, 3);

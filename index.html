@@ -5,8 +5,15 @@
     <link rel="stylesheet" href="./style.css" />
     <title>WebGL</title>
   </head>
-  <body>
-    <canvas id="webgl-app" width="780" height="640"></canvas>
+  <body style="background-color: grey;">
+    <canvas id="webgl-app" width="640" height="640"></canvas>
+    <input type="color" id="shape-color" value="#000000" onchange="setShapeColor()">
+		<input type="color" id="canvas-color" value="#ffffff" onchange="setCanvasColor()">
+    <button onclick="switchToSelectionTool()">Selection Tool</button>
+    <button onclick="switchToLineTool()">Line Tool</button>
+    <button onclick="switchToPolygonTool()">Polygon Tool</button>
     <script src="engine.js"></script>
+    <script src="classes.js"></script>
+    <script src="app.js"></script>
   </body>
 </html>
