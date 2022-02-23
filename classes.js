@@ -411,7 +411,7 @@ class Tool {
   }
 
   /* Draws the current state */
-  drawCanvas() {
+  _drawCanvas() {
     this.gl.clearColor(
       this.current.canvasColor.red,
       this.current.canvasColor.green,
@@ -422,6 +422,15 @@ class Tool {
     for (let shape of this.current.shapes) {
       shape.draw();
     }
+  }
+
+  /**
+   * Interface for _drawCanvas
+   * Override this to add extra steps in drawing the canvas
+   */
+  drawCanvas() {
+    this._drawCanvas();
+    /* Additional drawing steps can be added after overriding this method */
   }
 
   /**
@@ -468,6 +477,14 @@ class SelectionTool extends Tool {
   }
 
   /**
+   * Override drawCanvas
+   */
+  drawCanvas() {
+    this._drawCanvas();
+    this.drawSelectedShapeBoundaries();
+  }
+
+  /**
    * Reset attributes to default values
    */
   resetTool() {
@@ -509,7 +526,6 @@ class SelectionTool extends Tool {
   selectShape(e) {
     this.activeShape = this.getSelectedShape(e);
     this.drawCanvas();
-    this.drawSelectedShapeBoundaries();
   }
 
   /**
@@ -607,7 +623,6 @@ class SelectionTool extends Tool {
     if (this.dragging.flag) {
       this.drag(e);
       this.drawCanvas();
-      this.drawSelectedShapeBoundaries();
     }
   }
 
@@ -654,6 +669,14 @@ class TransformTool extends Tool {
   }
 
   /**
+   * Override drawCanvas
+   */
+  drawCanvas() {
+    this._drawCanvas();
+    this.drawSelectedShapeBorders();
+  }
+
+  /**
    * Reset attributes to default values
    */
   resetTool() {
@@ -690,7 +713,6 @@ class TransformTool extends Tool {
   selectShape(e) {
     this.active.shape = this.getSelectedShape(e);
     this.drawCanvas();
-    this.drawSelectedShapeBorders();
   }
 
   drawSelectedShapeBorders() {
@@ -814,7 +836,6 @@ class TransformTool extends Tool {
     if (this.dragging.flag) {
       this.drag(e);
       this.drawCanvas();
-      this.drawSelectedShapeBorders();
     }
   }
 
