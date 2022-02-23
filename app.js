@@ -91,6 +91,10 @@ eventListeners.append([
   selectionTool.mouseDownListener.bind(selectionTool),
 ]);
 eventListeners.append([
+  'mousemove',
+  selectionTool.mouseMoveListener.bind(selectionTool),
+]);
+eventListeners.append([
   "mouseup",
   selectionTool.mouseUpListener.bind(selectionTool),
 ]);
@@ -141,6 +145,10 @@ function switchToSelectionTool() {
     eventListeners.append([
       "mousedown",
       selectionTool.mouseDownListener.bind(selectionTool),
+    ]);
+    eventListeners.append([
+      'mousemove',
+      selectionTool.mouseMoveListener.bind(selectionTool),
     ]);
     eventListeners.append([
       "mouseup",
