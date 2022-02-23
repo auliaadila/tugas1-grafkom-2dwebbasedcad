@@ -40,6 +40,11 @@ class Point {
     this.x += vector.x;
     this.y += vector.y;
   }
+
+  distanceTo(point) {
+    let vector = new Vector(point.x - this.x, point.y - this.y);
+    return vector.magnitude();
+  }
 }
 
 class Vector {
@@ -58,12 +63,20 @@ class Vector {
   }
 
   /**
+   * Calculates the vector's magnitude
+   * @returns number
+   */
+  magnitude() {
+    return (this.x ** 2 + this.y ** 2) ** 0.5;
+  }
+
+  /**
    * Adds another vector to this one
    * @param {Vector} another
    */
   add(another) {
-    this.x += vector.x;
-    this.y += vector.y;
+    this.x += another.x;
+    this.y += another.y;
   }
 
   /**
@@ -129,7 +142,7 @@ class Color {
    */
   setColorFromHex(hex) {
     this.red = parseInt(hex[1] + hex[2], 16);
-    this.green = parseInt(hex[3] + hex[6], 16);
+    this.green = parseInt(hex[3] + hex[4], 16);
     this.blue = parseInt(hex[5] + hex[6], 16);
   }
 }
@@ -441,16 +454,15 @@ class SelectionTool extends Tool {
    */
   constructor(canvas, gl, current) {
     super(canvas, gl, current);
-    /* Points at the currently active shape (-1 if there's none currently) */
-    /** @type number */
-    this.activeShapeIndex = -1;
+    /** @type Shape */
+    this.activeShape = null;
     /** @type {{flag: boolean, origin: Point, points: Point[], offset(): Vector}} */
     this.dragging = {
       flag: false,
       origin: null,
       points: null,
-      offset(to) {
-        return new Vector(to.x - this.origin.x, to.y - this.origin.y);
+      direction(tip) {
+        return new Vector(tip.x - this.origin.x, tip.y - this.origin.y);
       },
     };
   }
@@ -459,48 +471,70 @@ class SelectionTool extends Tool {
    * Reset attributes to default values
    */
   resetTool() {
-    this.activeShapeIndex = -1;
+    this.activeShape = null;
     this.dragging.flag = false;
     this.dragging.origin = null;
     this.dragging.points = null;
   }
 
   setActiveShapeColor() {
-    if (
-      this.activeShapeIndex > -1 &&
-      this.activeShapeIndex < this.current.shapes.length
-    ) {
-      this.current.shapes[this.activeShapeIndex].color.copyColor(
-        this.current.shapeColor
-      );
+    if (this.activeShape instanceof Shape) {
+      this.activeShape.color.copyColor(this.current.shapeColor);
     }
   }
 
   /*~*~*~* EVENT LISTENERS (and related stuffs) *~*~*~*/
 
   /**
-   * Returns index of currently selected shape
+   * Returns object of currently selected shape
    * @param {MouseEvent} e
-   * @returns number
+   * @returns Shape
    */
-  getSelectedShapeIndex(e) {
-    let selectedShapeIndex = -1;
+  getSelectedShape(e) {
+    let selectedShape = null;
     for (let i = this.current.shapes.length - 1; i > -1; i -= 1) {
       if (this.current.shapes[i].contains(this.getCursorPosition(e))) {
-        selectedShapeIndex = i;
+        selectedShape = this.current.shapes[i];
         break;
       }
     }
-    return selectedShapeIndex;
+    return selectedShape;
   }
 
   /**
-   * Sets activeShapeIndex
+   * Sets activeShape
    * Can also be programmed to do other stuff
    * @param {MouseEvent} e
    */
   selectShape(e) {
-    this.activeShapeIndex = this.getSelectedShapeIndex(e);
+    this.activeShape = this.getSelectedShape(e);
+    this.drawCanvas();
+    this.drawSelectedShapeBoundaries();
+  }
+
+  /**
+   * Draws selected shape boundaries
+   */
+  drawSelectedShapeBoundaries() {
+    if (this.activeShape instanceof Shape) {
+      let leftBoundary = this.activeShape.leftBoundary();
+      let rightBoundary = this.activeShape.rightBoundary();
+      let topBoundary = this.activeShape.topBoundary();
+      let bottomBoundary = this.activeShape.bottomBoundary();
+      let topLeft = new Point(leftBoundary, topBoundary);
+      let topRight = new Point(rightBoundary, topBoundary);
+      let bottomLeft = new Point(leftBoundary, bottomBoundary);
+      let bottomRight = new Point(rightBoundary, bottomBoundary);
+      let color = new Color(0, 0, 125);
+      let boundaries = [];
+      boundaries.push(new Line(this.gl, [topLeft, topRight], color));
+      boundaries.push(new Line(this.gl, [topRight, bottomRight], color));
+      boundaries.push(new Line(this.gl, [bottomRight, bottomLeft], color));
+      boundaries.push(new Line(this.gl, [bottomLeft, topLeft], color));
+      for (let boundary of boundaries) {
+        boundary.draw();
+      }
+    }
   }
 
   /**
@@ -508,13 +542,10 @@ class SelectionTool extends Tool {
    * @param {MouseEvent} e
    */
   startDragging(e) {
-    if (
-      this.activeShapeIndex > -1 &&
-      this.activeShapeIndex < this.current.shapes.length
-    ) {
+    if (this.activeShape instanceof Shape) {
       this.dragging.origin = this.getCursorPosition(e);
       this.dragging.points = [];
-      for (let point of this.current.shapes[this.activeShapeIndex].points) {
+      for (let point of this.activeShape.points) {
         this.dragging.points.push(new Point(point.x, point.y));
       }
       this.dragging.flag = true;
@@ -527,12 +558,8 @@ class SelectionTool extends Tool {
    */
   drag(e) {
     if (this.dragging.flag) {
-      let tip = this.getCursorPosition(e);
-      let vector = new Vector(
-        tip.x - this.dragging.origin.x,
-        tip.y - this.dragging.origin.y
-      );
-      let points = this.current.shapes[this.activeShapeIndex].points;
+      let vector = this.dragging.direction(this.getCursorPosition(e));
+      let points = this.activeShape.points;
       let originalPoints = this.dragging.points;
       for (let i = 0; i < points.length; i += 1) {
         points[i].x = originalPoints[i].x + vector.x;
@@ -565,8 +592,8 @@ class SelectionTool extends Tool {
    * @param {MouseEvent} e
    */
   mouseDownListener(e) {
-    if (!this.dragging.flag && this.activeShapeIndex > -1) {
-      if (this.activeShapeIndex === this.getSelectedShapeIndex(e)) {
+    if (!this.dragging.flag && this.activeShape instanceof Shape) {
+      if (this.activeShape === this.getSelectedShape(e)) {
         this.startDragging(e);
       }
     }
@@ -580,6 +607,214 @@ class SelectionTool extends Tool {
     if (this.dragging.flag) {
       this.drag(e);
       this.drawCanvas();
+      this.drawSelectedShapeBoundaries();
+    }
+  }
+
+  /**
+   * Bind this to 'mouseup' event
+   * Ends dragging
+   * @param {MouseEvent} e
+   */
+  mouseUpListener(e) {
+    if (this.dragging.flag) {
+      this.stopDragging(e);
+    }
+  }
+}
+
+class TransformTool extends Tool {
+  /* A tool to transform shapes/move vertices */
+
+  /**
+   * Constructor
+   * @param {HTMLCanvasElement} canvas
+   * @param {WebGLRenderingContext} gl
+   * @param {{shapes: (Line|Polygon)[], shapeColor: Color, canvasColor: Color}} current
+   */
+  constructor(canvas, gl, current) {
+    super(canvas, gl, current);
+    /* Radius of a point */
+    /** @type number */
+    this.radius = (20 / this.canvas.width) * 2;
+    /** @type {{shape: Shape, point: Point}} */
+    this.active = {
+      shape: null,
+      point: null,
+    };
+    /** @type {{flag: boolean, origin: Point, point: Point, offset(): Vector}} */
+    this.dragging = {
+      flag: false,
+      origin: null,
+      point: null,
+      direction(tip) {
+        return new Vector(tip.x - this.origin.x, tip.y - this.origin.y);
+      },
+    };
+  }
+
+  /**
+   * Reset attributes to default values
+   */
+  resetTool() {
+    this.active.shape = null;
+    this.active.point = null;
+    this.dragging.flag = false;
+    this.dragging.origin = null;
+    this.dragging.point = null;
+  }
+
+  /*~*~*~* EVENT LISTENERS (and related stuffs) *~*~*~*/
+
+  /**
+   * Returns object of currently selected shape
+   * @param {MouseEvent} e
+   * @returns Shape
+   */
+  getSelectedShape(e) {
+    let selectedShape = null;
+    for (let i = this.current.shapes.length - 1; i > -1; i -= 1) {
+      if (this.current.shapes[i].contains(this.getCursorPosition(e))) {
+        selectedShape = this.current.shapes[i];
+        break;
+      }
+    }
+    return selectedShape;
+  }
+
+  /**
+   * Sets active.shape
+   * Can also be programmed to do other stuff
+   * @param {MouseEvent} e
+   */
+  selectShape(e) {
+    this.active.shape = this.getSelectedShape(e);
+    this.drawCanvas();
+    this.drawSelectedShapeBorders();
+  }
+
+  drawSelectedShapeBorders() {
+    if (this.active.shape instanceof Shape) {
+      let color = new Color(125, 0, 125);
+      let borders = [];
+      for (let i = 0; i < this.active.shape.points.length; i += 1) {
+        borders.push(
+          new Line(
+            this.gl,
+            [
+              this.active.shape.points[i],
+              this.active.shape.points[
+                (i + 1) % this.active.shape.points.length
+              ],
+            ],
+            color
+          )
+        );
+      }
+      for (let border of borders) {
+        border.draw();
+      }
+    }
+  }
+
+  /**
+   * Returns object of currently selected point
+   * @param {MouseEvent} e
+   * @returns Point
+   */
+  getSelectedPoint(e) {
+    let selectedPoint = null;
+    if (this.active.shape instanceof Shape) {
+      for (let i = this.active.shape.points.length - 1; i > -1; i -= 1) {
+        if (
+          this.active.shape.points[i].distanceTo(this.getCursorPosition(e)) <
+          this.radius
+        ) {
+          selectedPoint = this.active.shape.points[i];
+          break;
+        }
+      }
+    }
+    return selectedPoint;
+  }
+
+  /**
+   * Sets active.point
+   * Can also be programmed to do other stuff
+   * @param {MouseEvent} e
+   */
+  selectPoint(e) {
+    this.active.point = this.getSelectedPoint(e);
+  }
+
+  /**
+   * Initializes the dragging object
+   * @param {MouseEvent} e
+   */
+  startDragging(e) {
+    if (
+      this.active.shape instanceof Shape &&
+      this.active.point instanceof Point
+    ) {
+      this.dragging.origin = this.getCursorPosition(e);
+      this.dragging.point = new Point(this.active.point.x, this.active.point.y);
+      this.dragging.flag = true;
+    }
+  }
+
+  /**
+   * Moves the dragged point according to cursor movement
+   * @param {MouseEvent} e
+   */
+  drag(e) {
+    if (this.dragging.flag) {
+      let vector = this.dragging.direction(this.getCursorPosition(e));
+      this.active.point.x = this.dragging.point.x + vector.x;
+      this.active.point.y = this.dragging.point.y + vector.y;
+    }
+  }
+
+  /**
+   * Terminates the dragging object
+   * @param {MouseEvent} e
+   */
+  stopDragging(e) {
+    this.dragging.flag = false;
+    this.dragging.origin = null;
+    this.dragging.point = null;
+  }
+
+  /**
+   * Bind this to 'click' event
+   * Selects the topmost shape
+   * @param {MouseEvent} e */
+  clickListener(e) {
+    this.selectShape(e);
+  }
+
+  /**
+   * Bind this to 'mousedown' event
+   * Starts dragging
+   * @param {MouseEvent} e
+   */
+  mouseDownListener(e) {
+    if (!this.dragging.flag && this.active.shape instanceof Shape) {
+      this.selectPoint(e);
+      if (this.active.point instanceof Point) {
+        this.startDragging(e);
+      }
+    }
+  }
+
+  /** Bind this to 'mousemove' event
+   * Drags the selected point
+   * @param {MouseEvent} e
+   */
+  mouseMoveListener(e) {
+    if (this.dragging.flag) {
+      this.drag(e);
+      this.drawCanvas();
+      this.drawSelectedShapeBorders();
     }
   }
 
