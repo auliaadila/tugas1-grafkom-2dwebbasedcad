@@ -662,15 +662,17 @@ class TransformTool extends Tool {
     /* Radius of a point */
     /** @type number */
     this.radius = (20 / this.canvas.width) * 2;
-    /** @type {{shape: Shape, point: Point}} */
+    /** @type {{shape: Shape, point: Point, pointIndex: number}} */
     this.active = {
       shape: null,
       point: null,
+      pointIndex: -1,
     };
-    /** @type {{flag: boolean, origin: Point, point: Point, offset(): Vector}} */
+    /** @type {{flag: boolean, origin: Point, points: Point[], point: Point, offset(): Vector}} */
     this.dragging = {
       flag: false,
       origin: null,
+      points: null,
       point: null,
       direction(tip) {
         return new Vector(tip.x - this.origin.x, tip.y - this.origin.y);
@@ -692,8 +694,10 @@ class TransformTool extends Tool {
   resetTool() {
     this.active.shape = null;
     this.active.point = null;
+    this.active.pointIndex = -1;
     this.dragging.flag = false;
     this.dragging.origin = null;
+    this.dragging.points = null;
     this.dragging.point = null;
   }
 
@@ -754,29 +758,35 @@ class TransformTool extends Tool {
    * @param {MouseEvent} e
    * @returns Point
    */
-  getSelectedPoint(e) {
-    let selectedPoint = null;
+  getSelectedPointAndIndex(e) {
+    let selected = {
+      point: null,
+      index: -1,
+    };
     if (this.active.shape instanceof Shape) {
       for (let i = this.active.shape.points.length - 1; i > -1; i -= 1) {
         if (
           this.active.shape.points[i].distanceTo(this.getCursorPosition(e)) <
           this.radius
         ) {
-          selectedPoint = this.active.shape.points[i];
+          selected.point = this.active.shape.points[i];
+          selected.index = i;
           break;
         }
       }
     }
-    return selectedPoint;
+    return selected;
   }
 
   /**
-   * Sets active.point
+   * Sets active.point and active.pointIndex
    * Can also be programmed to do other stuff
    * @param {MouseEvent} e
    */
   selectPoint(e) {
-    this.active.point = this.getSelectedPoint(e);
+    let selected = this.getSelectedPointAndIndex(e);
+    this.active.point = selected.point;
+    this.active.pointIndex = selected.index;
   }
 
   /**
@@ -789,7 +799,11 @@ class TransformTool extends Tool {
       this.active.point instanceof Point
     ) {
       this.dragging.origin = this.getCursorPosition(e);
-      this.dragging.point = new Point(this.active.point.x, this.active.point.y);
+      this.dragging.points = [];
+      for (let point of this.active.shape.points) {
+        this.dragging.points.push(new Point(point.x, point.y));
+      }
+      this.dragging.point = this.dragging.points[this.active.pointIndex];
       this.dragging.flag = true;
     }
   }
@@ -800,9 +814,61 @@ class TransformTool extends Tool {
    */
   drag(e) {
     if (this.dragging.flag) {
+      /* Draw a transformation vector in the direction of cursor movement */
       let vector = this.dragging.direction(this.getCursorPosition(e));
+
+      /* Transformation vector needs to be adjusted if shape is a square */
+      if (this.active.shape instanceof Square) {
+        /* Invert transformation vector if it's not pointing outward from the shape in both x and y directions */
+        let oppositePointIndex = (this.active.pointIndex + 2) % 4;
+        let directionVector = new Vector(
+          this.dragging.points[oppositePointIndex].x - this.dragging.point.x,
+          this.dragging.points[oppositePointIndex].y - this.dragging.point.y
+        );
+        if (
+          Math.sign(vector.x) === Math.sign(directionVector.x) ||
+          Math.sign(vector.y) === Math.sign(directionVector.y)
+        ) {
+          vector.x = Math.sign(directionVector.x) * Math.abs(vector.x);
+          vector.y = Math.sign(directionVector.y) * Math.abs(vector.y);
+        }
+
+        /* |vector.x| = |vector.y| = min(|vector.x|, |vector.y|) */
+        vector.x =
+          Math.sign(vector.x) *
+          Math.min(Math.abs(vector.x), Math.abs(vector.y));
+        vector.y = Math.sign(vector.y) * Math.abs(vector.x);
+      }
+
+      /* Translate the point */
       this.active.point.x = this.dragging.point.x + vector.x;
       this.active.point.y = this.dragging.point.y + vector.y;
+
+      /* If shape is a square or a rectangle, also translate the adjacent points */
+      if (
+        this.active.shape instanceof Square ||
+        this.active.shape instanceof Rectangle
+      ) {
+        let adjacentPoints = [];
+        adjacentPoints.push({
+          active: this.active.shape.points[(this.active.pointIndex + 1) % 4],
+          dragging: this.dragging.points[(this.active.pointIndex + 1) % 4],
+        });
+        adjacentPoints.push({
+          active: this.active.shape.points[(this.active.pointIndex + 3) % 4],
+          dragging: this.dragging.points[(this.active.pointIndex + 3) % 4],
+        });
+        for (let adjacentPoint of adjacentPoints) {
+          if (
+            Math.abs(adjacentPoint.dragging.x - this.dragging.point.x) >
+            Math.abs(adjacentPoint.dragging.y - this.dragging.point.y)
+          ) {
+            adjacentPoint.active.y = this.active.point.y;
+          } else {
+            adjacentPoint.active.x = this.active.point.x;
+          }
+        }
+      }
     }
   }
 
@@ -813,7 +879,17 @@ class TransformTool extends Tool {
   stopDragging(e) {
     this.dragging.flag = false;
     this.dragging.origin = null;
+    this.dragging.points = null;
     this.dragging.point = null;
+  }
+
+  /**
+   * De-sets active.point and active.pointIndex
+   * Can also be programmed to do other stuff
+   */
+  deSelectPoint() {
+    this.active.point = null;
+    this.active.pointIndex = -1;
   }
 
   /**
@@ -857,6 +933,7 @@ class TransformTool extends Tool {
   mouseUpListener(e) {
     if (this.dragging.flag) {
       this.stopDragging(e);
+      this.deSelectPoint();
     }
   }
 }
