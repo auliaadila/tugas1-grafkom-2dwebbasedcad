@@ -34,6 +34,11 @@ current.canvasColor.setColorFromHex(
 const selectionTool = new SelectionTool(canvas, gl, current);
 
 /**
+ * Selection tool
+ */
+const resizeTool = new ResizeTool(canvas, gl, current);
+
+/**
  * Line tool
  */
 const lineTool = new LineTool(canvas, gl, current);
@@ -51,7 +56,7 @@ const rectangleTool = new RectangleTool(canvas, gl, current);
 /**
  * SquareTool tool
  */
- const squareTool = new SquareTool(canvas, gl, current);
+const squareTool = new SquareTool(canvas, gl, current);
 
 /**
  * Event listener tracker
@@ -91,7 +96,7 @@ eventListeners.append([
   selectionTool.mouseDownListener.bind(selectionTool),
 ]);
 eventListeners.append([
-  'mousemove',
+  "mousemove",
   selectionTool.mouseMoveListener.bind(selectionTool),
 ]);
 eventListeners.append([
@@ -147,7 +152,7 @@ function switchToSelectionTool() {
       selectionTool.mouseDownListener.bind(selectionTool),
     ]);
     eventListeners.append([
-      'mousemove',
+      "mousemove",
       selectionTool.mouseMoveListener.bind(selectionTool),
     ]);
     eventListeners.append([
@@ -225,16 +230,28 @@ function switchToSquareTool() {
   if (!(currentTool instanceof SquareTool)) {
     eventListeners.removeFromCanvas();
     eventListeners.clear();
-    eventListeners.append([
-      "click",
-      squareTool.clickListener.bind(squareTool),
-    ]);
+    eventListeners.append(["click", squareTool.clickListener.bind(squareTool)]);
     eventListeners.append([
       "mousemove",
       squareTool.mouseMoveListener.bind(squareTool),
     ]);
     eventListeners.addToCanvas();
     currentTool = squareTool;
+  }
+}
+
+function switchToResizeTool() {
+  if (!(currentTool instanceof ResizeTool)) {
+    console.log("Resize Mode")
+    eventListeners.removeFromCanvas();
+    eventListeners.clear();
+    eventListeners.append(["click", resizeTool.clickListener.bind(resizeTool)]);
+    eventListeners.append([
+      "mousemove",
+      resizeTool.mouseMoveListener.bind(resizeTool),
+    ]);
+    eventListeners.addToCanvas();
+    currentTool = resizeTool;
   }
 }
 
