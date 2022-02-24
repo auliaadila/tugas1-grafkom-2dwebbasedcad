@@ -34,9 +34,14 @@ current.canvasColor.setColorFromHex(
 const selectionTool = new SelectionTool(canvas, gl, current);
 
 /**
- * Selection tool
+ * Transform tool
  */
-const resizeTool = new ResizeTool(canvas, gl, current);
+const transformTool = new TransformTool(canvas, gl, current);
+
+/**
+ * Resize tool
+ */
+ const resizeTool = new ResizeTool(canvas, gl, current);
 
 /**
  * Line tool
@@ -54,7 +59,7 @@ const polygonTool = new PolygonTool(canvas, gl, current);
 const rectangleTool = new RectangleTool(canvas, gl, current);
 
 /**
- * SquareTool tool
+ * Square tool
  */
 const squareTool = new SquareTool(canvas, gl, current);
 
@@ -161,6 +166,37 @@ function switchToSelectionTool() {
     ]);
     eventListeners.addToCanvas();
     currentTool = selectionTool;
+    currentTool.drawCanvas();
+  }
+}
+
+/**
+ * Changes currentTool to transformTool
+ */
+function switchToTransformTool() {
+  if (!(currentTool instanceof TransformTool)) {
+    currentTool.resetTool();
+    eventListeners.removeFromCanvas();
+    eventListeners.clear();
+    eventListeners.append([
+      "click",
+      transformTool.clickListener.bind(transformTool),
+    ]);
+    eventListeners.append([
+      "mousedown",
+      transformTool.mouseDownListener.bind(transformTool),
+    ]);
+    eventListeners.append([
+      "mousemove",
+      transformTool.mouseMoveListener.bind(transformTool),
+    ]);
+    eventListeners.append([
+      "mouseup",
+      transformTool.mouseUpListener.bind(transformTool),
+    ]);
+    eventListeners.addToCanvas();
+    currentTool = transformTool;
+    currentTool.drawCanvas();
   }
 }
 
@@ -179,6 +215,7 @@ function switchToLineTool() {
     ]);
     eventListeners.addToCanvas();
     currentTool = lineTool;
+    currentTool.drawCanvas();
   }
 }
 
@@ -187,6 +224,7 @@ function switchToLineTool() {
  */
 function switchToPolygonTool() {
   if (!(currentTool instanceof PolygonTool)) {
+    currentTool.resetTool();
     eventListeners.removeFromCanvas();
     eventListeners.clear();
     eventListeners.append([
@@ -203,6 +241,7 @@ function switchToPolygonTool() {
     ]);
     eventListeners.addToCanvas();
     currentTool = polygonTool;
+    currentTool.drawCanvas();
   }
 }
 
@@ -211,6 +250,7 @@ function switchToPolygonTool() {
  */
 function switchToRectangleTool() {
   if (!(currentTool instanceof RectangleTool)) {
+    currentTool.resetTool();
     eventListeners.removeFromCanvas();
     eventListeners.clear();
     eventListeners.append([
@@ -223,11 +263,13 @@ function switchToRectangleTool() {
     ]);
     eventListeners.addToCanvas();
     currentTool = rectangleTool;
+    currentTool.drawCanvas();
   }
 }
 
 function switchToSquareTool() {
   if (!(currentTool instanceof SquareTool)) {
+    currentTool.resetTool();
     eventListeners.removeFromCanvas();
     eventListeners.clear();
     eventListeners.append(["click", squareTool.clickListener.bind(squareTool)]);
@@ -237,6 +279,7 @@ function switchToSquareTool() {
     ]);
     eventListeners.addToCanvas();
     currentTool = squareTool;
+    currentTool.drawCanvas();
   }
 }
 
