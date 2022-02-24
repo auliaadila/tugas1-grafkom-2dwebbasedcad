@@ -338,7 +338,7 @@ class Square extends Shape {
       Math.abs(points[0].y - points[1].y)
     );
 
-    let scaled = leastWidth * canvas.height / canvas.width;
+    let scaled = (leastWidth * canvas.height) / canvas.width;
 
     /* First Quadrant */
     if (points[1].x > points[0].x && points[1].y > points[0].y) {
@@ -1264,7 +1264,10 @@ class ResizeTool extends Tool {
 
   getIndex(point) {
     for (let i = 0; i < this.current.shapes.length; i++) {
-      if (this.current.shapes[i] instanceof Square) {
+      if (
+        this.current.shapes[i] instanceof Square ||
+        this.current.shapes[i] instanceof Rectangle
+      ) {
         let point1 = this.current.shapes[i].newPoints[0];
         let point2 = this.current.shapes[i].newPoints[1];
         let point3 = this.current.shapes[i].newPoints[2];
@@ -1345,6 +1348,15 @@ class ResizeTool extends Tool {
 
           this.current.shapes.splice(this.selected[0], 1);
           this.isDragging = true;
+        } else if (this.current.shapes[this.selected[0]] instanceof Rectangle) {
+          this.shape = new Rectangle(
+            this.gl,
+            [this.selected[1], point],
+            this.color
+          );
+
+          this.current.shapes.splice(this.selected[0], 1);
+          this.isDragging = true;
         } else {
           this.resetTool();
         }
@@ -1366,6 +1378,12 @@ class ResizeTool extends Tool {
         );
       } else if (this.shape instanceof Line) {
         this.shape.points[1].copyPoint(this.getCursorPosition(e));
+      } else if (this.shape instanceof Rectangle) {
+        this.shape = new Rectangle(
+          this.gl,
+          [this.shape.points[0], this.getCursorPosition(e)],
+          this.color
+        );
       }
 
       this.drawCanvas();

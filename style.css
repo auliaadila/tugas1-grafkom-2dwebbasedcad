@@ -3,3 +3,7 @@ body {
   overflow: hidden;
   height: max-content;
 }
+
+p, h3 {
+  margin: 0;
+}
