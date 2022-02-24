@@ -456,9 +456,12 @@ class Tool {
     );
   }
 
-  /* Resets the tool (to be overidden by child classes) */
+  /**
+   * Resets the tool
+   * (to be overidden by child classes)
+   */
   resetTool() {
-    /* pass */
+    throw("Not implemented method: " + this.constructor.name + ".resetTool()'")
   }
 }
 
@@ -817,27 +820,28 @@ class TransformTool extends Tool {
       /* Draw a transformation vector in the direction of cursor movement */
       let vector = this.dragging.direction(this.getCursorPosition(e));
 
-      /* Transformation vector needs to be adjusted if shape is a square */
-      if (this.active.shape instanceof Square) {
-        /* Invert transformation vector if it's not pointing outward from the shape in both x and y directions */
-        let oppositePointIndex = (this.active.pointIndex + 2) % 4;
-        let directionVector = new Vector(
-          this.dragging.points[oppositePointIndex].x - this.dragging.point.x,
-          this.dragging.points[oppositePointIndex].y - this.dragging.point.y
-        );
-        if (
-          Math.sign(vector.x) === Math.sign(directionVector.x) ||
-          Math.sign(vector.y) === Math.sign(directionVector.y)
-        ) {
-          vector.x = Math.sign(directionVector.x) * Math.abs(vector.x);
-          vector.y = Math.sign(directionVector.y) * Math.abs(vector.y);
+      /** Transformation vector needs to be adjusted if:
+       * - shape is a square, or 
+       * - shift is pressed and shape is either line or rectangle
+       * We use vector projection to do this
+       */
+      if ((this.active.shape instanceof Square) || (e.shiftKey && ((this.active.shape instanceof Line) || (this.active.shape instanceof Rectangle)))) {
+        let oppositePointIndex = -1
+        if (this.active.shape instanceof Line) {
+          oppositePointIndex = (this.active.pointIndex + 1) % 2;
+        } else {
+          oppositePointIndex = (this.active.pointIndex + 2) % 4;
         }
+        let directionVector = new Vector((this.dragging.point.x - this.dragging.points[oppositePointIndex].x), (this.dragging.point.y - this.dragging.points[oppositePointIndex].y))
+        let magnitude = ((vector.x * directionVector.x) + (vector.y * directionVector.y)) / ((directionVector.x ** 2) + (directionVector.y ** 2))
+        vector.x = magnitude * directionVector.x
+        vector.y = magnitude * directionVector.y
 
-        /* |vector.x| = |vector.y| = min(|vector.x|, |vector.y|) */
-        vector.x =
-          Math.sign(vector.x) *
-          Math.min(Math.abs(vector.x), Math.abs(vector.y));
-        vector.y = Math.sign(vector.y) * Math.abs(vector.x);
+        /* Final check when shape is a Square */
+        if (this.active.shape instanceof Square) {
+          vector.x = Math.sign(vector.x) * Math.min(Math.abs(vector.x), Math.abs(vector.y))
+          vector.y = Math.sign(vector.y) * Math.abs(vector.x)
+        }
       }
 
       /* Translate the point */
