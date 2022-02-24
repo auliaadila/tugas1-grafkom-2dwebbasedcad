@@ -41,7 +41,7 @@ const transformTool = new TransformTool(canvas, gl, current);
 /**
  * Resize tool
  */
- const resizeTool = new ResizeTool(canvas, gl, current);
+const resizeTool = new ResizeTool(canvas, gl, current);
 
 /**
  * Line tool
@@ -136,7 +136,9 @@ function setShapeColor() {
  * and re-draws the canvas
  */
 function setCanvasColor() {
-  current.canvasColor.copyColor(document.getElementById("canvas-color").value);
+  current.canvasColor.setColorFromHex(
+    document.getElementById("canvas-color").value
+  );
   currentTool.drawCanvas();
 }
 
@@ -285,7 +287,7 @@ function switchToSquareTool() {
 
 function switchToResizeTool() {
   if (!(currentTool instanceof ResizeTool)) {
-    console.log("Resize Mode")
+    console.log("Resize Mode");
     eventListeners.removeFromCanvas();
     eventListeners.clear();
     eventListeners.append(["click", resizeTool.clickListener.bind(resizeTool)]);
