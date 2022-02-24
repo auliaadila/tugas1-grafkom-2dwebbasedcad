@@ -287,7 +287,7 @@ function switchToSquareTool() {
 
 function switchToResizeTool() {
   if (!(currentTool instanceof ResizeTool)) {
-    console.log("Resize Mode");
+    currentTool.resetTool();
     eventListeners.removeFromCanvas();
     eventListeners.clear();
     eventListeners.append(["click", resizeTool.clickListener.bind(resizeTool)]);

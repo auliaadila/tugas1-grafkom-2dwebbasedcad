@@ -333,42 +333,44 @@ class Square extends Shape {
    */
   constructor(gl, points, color) {
     super(gl, points, color, gl.TRIANGLE_FAN);
-    let leastWidth =
-      Math.abs(points[0].x - points[1].x) < Math.abs(points[0].y - points[1].y)
-        ? Math.abs(points[0].x - points[1].x)
-        : Math.abs(points[0].y - points[1].y);
+    let leastWidth = Math.min(
+      Math.abs(points[0].x - points[1].x),
+      Math.abs(points[0].y - points[1].y)
+    );
+
+    let scaled = leastWidth * canvas.height / canvas.width;
 
     /* First Quadrant */
     if (points[1].x > points[0].x && points[1].y > points[0].y) {
       this.newPoints = [
         new Point(points[0].x, points[0].y),
         new Point(points[0].x, points[0].y + leastWidth),
-        new Point(points[0].x + leastWidth, points[0].y + leastWidth),
-        new Point(points[0].x + leastWidth, points[0].y),
+        new Point(points[0].x + scaled, points[0].y + leastWidth),
+        new Point(points[0].x + scaled, points[0].y),
       ];
     } else if (points[1].x < points[0].x && points[1].y > points[0].y) {
       /* Second Quadrant */
       this.newPoints = [
         new Point(points[0].x, points[0].y),
         new Point(points[0].x, points[0].y + leastWidth),
-        new Point(points[0].x - leastWidth, points[0].y + leastWidth),
-        new Point(points[0].x - leastWidth, points[0].y),
+        new Point(points[0].x - scaled, points[0].y + leastWidth),
+        new Point(points[0].x - scaled, points[0].y),
       ];
     } else if (points[1].x < points[0].x && points[1].y < points[0].y) {
       /* Third Quadrant */
       this.newPoints = [
         new Point(points[0].x, points[0].y),
         new Point(points[0].x, points[0].y - leastWidth),
-        new Point(points[0].x - leastWidth, points[0].y - leastWidth),
-        new Point(points[0].x - leastWidth, points[0].y),
+        new Point(points[0].x - scaled, points[0].y - leastWidth),
+        new Point(points[0].x - scaled, points[0].y),
       ];
     } else {
       /* Fourth Quadrant */
       this.newPoints = [
         new Point(points[0].x, points[0].y),
         new Point(points[0].x, points[0].y - leastWidth),
-        new Point(points[0].x + leastWidth, points[0].y - leastWidth),
-        new Point(points[0].x + leastWidth, points[0].y),
+        new Point(points[0].x + scaled, points[0].y - leastWidth),
+        new Point(points[0].x + scaled, points[0].y),
       ];
     }
     this.points = this.newPoints;
@@ -1233,6 +1235,8 @@ class ResizeTool extends Tool {
     this.isDragging = false;
     /** @type Shape */
     this.shape = null;
+    /**@type Color */
+    this.color = null;
   }
 
   /**
@@ -1250,6 +1254,7 @@ class ResizeTool extends Tool {
     this.shape = null;
     this.selected = [];
     this.isDragging = false;
+    this.color = null;
   }
 
   /**
@@ -1315,7 +1320,6 @@ class ResizeTool extends Tool {
    * @param {MouseEvent} e
    */
   clickListener(e) {
-    console.log("MSK");
     if (this.isDragging) {
       this.current.shapes.push(this.shape);
       this.shape.draw();
@@ -1326,21 +1330,18 @@ class ResizeTool extends Tool {
       this.getIndex(point);
 
       if (this.selected.length > 0) {
+        this.color = this.current.shapes[this.selected[0]].color;
         if (this.current.shapes[this.selected[0]] instanceof Square) {
           this.shape = new Square(
             this.gl,
             [this.selected[1], point],
-            this.current.shapes[this.selected[0]].color
+            this.color
           );
 
           this.current.shapes.splice(this.selected[0], 1);
           this.isDragging = true;
         } else if (this.current.shapes[this.selected[0]] instanceof Line) {
-          this.shape = new Line(
-            this.gl,
-            [this.selected[1], point],
-            this.current.shapes[this.selected[0]].color
-          );
+          this.shape = new Line(this.gl, [this.selected[1], point], this.color);
 
           this.current.shapes.splice(this.selected[0], 1);
           this.isDragging = true;
@@ -1361,8 +1362,7 @@ class ResizeTool extends Tool {
         this.shape = new Square(
           this.gl,
           [this.shape.points[0], this.getCursorPosition(e)],
-          this,
-          this.shape.shapeColor
+          this.color
         );
       } else if (this.shape instanceof Line) {
         this.shape.points[1].copyPoint(this.getCursorPosition(e));
