@@ -39,6 +39,11 @@ const selectionTool = new SelectionTool(canvas, gl, current);
 const transformTool = new TransformTool(canvas, gl, current);
 
 /**
+ * Resize tool
+ */
+ const resizeTool = new ResizeTool(canvas, gl, current);
+
+/**
  * Line tool
  */
 const lineTool = new LineTool(canvas, gl, current);
@@ -275,6 +280,21 @@ function switchToSquareTool() {
     eventListeners.addToCanvas();
     currentTool = squareTool;
     currentTool.drawCanvas();
+  }
+}
+
+function switchToResizeTool() {
+  if (!(currentTool instanceof ResizeTool)) {
+    console.log("Resize Mode")
+    eventListeners.removeFromCanvas();
+    eventListeners.clear();
+    eventListeners.append(["click", resizeTool.clickListener.bind(resizeTool)]);
+    eventListeners.append([
+      "mousemove",
+      resizeTool.mouseMoveListener.bind(resizeTool),
+    ]);
+    eventListeners.addToCanvas();
+    currentTool = resizeTool;
   }
 }
 

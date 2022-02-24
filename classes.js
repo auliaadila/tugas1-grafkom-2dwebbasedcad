@@ -41,6 +41,16 @@ class Point {
     this.y += vector.y;
   }
 
+  /**
+   * Check if point is near minimum threshold area
+   * @param {Point} point
+   */
+  isPointNear(point) {
+    return (
+      Math.abs(this.x - point.x) <= 0.1 && Math.abs(this.y - point.y) <= 0.1
+    );
+  }
+
   distanceTo(point) {
     let vector = new Vector(point.x - this.x, point.y - this.y);
     return vector.magnitude();
@@ -1106,6 +1116,164 @@ class SquareTool extends Tool {
       );
       this.drawCanvas();
       this.square.draw();
+    }
+  }
+}
+
+class ResizeTool extends Tool {
+  /* A tool to create squares */
+
+  /**
+   * Constructor
+   * @param {HTMLCanvasElement} canvas
+   * @param {WebGLRenderingContext} gl
+   * @param {{shapes: (Square)[], shapeColor: Color, canvasColor: Color}} current
+   */
+  constructor(canvas, gl, current) {
+    super(canvas, gl, current);
+    /** @type int */
+    this.selected = [];
+    /** @type boolean */
+    this.isDragging = false;
+    /** @type Shape */
+    this.shape = null;
+  }
+
+  /**
+   * Override drawCanvas
+   */
+  drawCanvas() {
+    this._drawCanvas();
+    this.drawSelectedShapeBorders();
+  }
+
+  /**
+   * Reset .line and .isDrawing to default values
+   */
+  resetTool() {
+    this.shape = null;
+    this.selected = [];
+    this.isDragging = false;
+  }
+
+  /**
+   * Returns of index and point inside clicked area threshold
+   * @param {Point} point
+   */
+
+  getIndex(point) {
+    for (let i = 0; i < this.current.shapes.length; i++) {
+      if (this.current.shapes[i] instanceof Square) {
+        let point1 = this.current.shapes[i].newPoints[0];
+        let point2 = this.current.shapes[i].newPoints[1];
+        let point3 = this.current.shapes[i].newPoints[2];
+        let point4 = this.current.shapes[i].newPoints[3];
+
+        if (point.isPointNear(point1)) {
+          this.selected.push(i);
+          this.selected.push(point3);
+        } else if (point.isPointNear(point2)) {
+          this.selected.push(i);
+          this.selected.push(point4);
+        } else if (point.isPointNear(point3)) {
+          this.selected.push(i);
+          this.selected.push(point1);
+        } else if (point.isPointNear(point4)) {
+          this.selected.push(i);
+          this.selected.push(point2);
+        }
+      } else if (this.current.shapes[i] instanceof Line) {
+        if (point.isPointNear(this.current.shapes[i].points[0])) {
+          this.selected.push(i, this.current.shapes[i].points[1]);
+        } else if (point.isPointNear(this.current.shapes[i].points[1])) {
+          this.selected.push(i, this.current.shapes[i].points[0]);
+        }
+      }
+    }
+  }
+
+  drawSelectedShapeBorders() {
+    if (this.shape instanceof Shape) {
+      let color = new Color(125, 0, 125);
+      let borders = [];
+      for (let i = 0; i < this.shape.points.length; i += 1) {
+        borders.push(
+          new Line(
+            this.gl,
+            [
+              this.shape.points[i],
+              this.shape.points[(i + 1) % this.shape.points.length],
+            ],
+            color
+          )
+        );
+      }
+      for (let border of borders) {
+        border.draw();
+      }
+    }
+  }
+
+  /**
+   * Bind this to 'click' event
+   * @param {MouseEvent} e
+   */
+  clickListener(e) {
+    console.log("MSK");
+    if (this.isDragging) {
+      this.current.shapes.push(this.shape);
+      this.shape.draw();
+      this.drawCanvas();
+      this.resetTool();
+    } else {
+      let point = this.getCursorPosition(e);
+      this.getIndex(point);
+
+      if (this.selected.length > 0) {
+        if (this.current.shapes[this.selected[0]] instanceof Square) {
+          this.shape = new Square(
+            this.gl,
+            [this.selected[1], point],
+            this.current.shapes[this.selected[0]].color
+          );
+
+          this.current.shapes.splice(this.selected[0], 1);
+          this.isDragging = true;
+        } else if (this.current.shapes[this.selected[0]] instanceof Line) {
+          this.shape = new Line(
+            this.gl,
+            [this.selected[1], point],
+            this.current.shapes[this.selected[0]].color
+          );
+
+          this.current.shapes.splice(this.selected[0], 1);
+          this.isDragging = true;
+        } else {
+          this.resetTool();
+        }
+      }
+    }
+  }
+
+  /**
+   * Bind this to 'mousemove' event
+   * @param {MouseEvent} e
+   */
+  mouseMoveListener(e) {
+    if (this.isDragging) {
+      if (this.shape instanceof Square) {
+        this.shape = new Square(
+          this.gl,
+          [this.shape.points[0], this.getCursorPosition(e)],
+          this,
+          this.shape.shapeColor
+        );
+      } else if (this.shape instanceof Line) {
+        this.shape.points[1].copyPoint(this.getCursorPosition(e));
+      }
+
+      this.drawCanvas();
+      this.shape.draw();
     }
   }
 }
