@@ -2,34 +2,141 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+      crossorigin="anonymous"
+    ></script>
     <link rel="stylesheet" href="./style.css" />
     <title>WebGL</title>
   </head>
-  <body style="background-color: grey">
-    <canvas id="webgl-app" width="640" height="640"></canvas>
-    <label for="shape-color">Shape Color</label>
-    <input
-      type="color"
-      id="shape-color"
-      value="#000000"
-      oninput="setShapeColor()"
-      onchange="setShapeColor()"
-    />
-    <label for="canvas-color">Canvas Color</label>
-    <input
-      type="color"
-      id="canvas-color"
-      value="#ffffff"
-      oninput="setCanvasColor()"
-      onchange="setCanvasColor()"
-    />
-    <button onclick="switchToSelectionTool()">Selection Tool</button>
-    <button onclick="switchToTransformTool()">Transform Tool</button>
-    <button onclick="switchToResizeTool()">Resize Tool</button>
-    <button onclick="switchToLineTool()">Line Tool</button>
-    <button onclick="switchToPolygonTool()">Polygon Tool</button>
-    <button onclick="switchToRectangleTool()">Rectangle Tool</button>
-    <button onclick="switchToSquareTool()">Square Tool</button>
+  <body style="background-color: lightgrey">
+    <div class="row row align-items-start">
+      <div class="col">
+        <canvas class="p-4" id="webgl-app" width="820" height="640"></canvas>
+      </div>
+      <div class="col p-4">
+        <div class="container">
+          <h4 class="mt-4">Color</h4>
+          <div class="container">
+            <table class="table table-borderless">
+              <tbody>
+                <tr>
+                  <th><label for="shape-color">Shape Color</label></th>
+                  <td>
+                    <input
+                      type="color"
+                      id="shape-color"
+                      value="#000000"
+                      oninput="setShapeColor()"
+                      onchange="setShapeColor()"
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <th><label for="canvas-color">Canvas Color</label></th>
+                  <td>
+                    <input
+                      type="color"
+                      id="canvas-color"
+                      value="#ffffff"
+                      oninput="setCanvasColor()"
+                      onchange="setCanvasColor()"
+                    />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="container">
+          <h4 class="my-4">Tools</h4>
+          <div class="container">
+            <button onclick="switchToSelectionTool()" class="btn btn-dark">
+              Select
+            </button>
+            <button onclick="switchToTransformTool()" class="btn btn-dark">
+              Transform
+            </button>
+            <button onclick="switchToResizeTool()" class="btn btn-dark">
+              Resize
+            </button>
+          </div>
+        </div>
+
+        <div class="container">
+          <h4 class="my-4">Shape</h4>
+          <div class="container">
+            <button onclick="switchToLineTool()" class="btn btn-dark">
+              Line
+            </button>
+            <button onclick="switchToPolygonTool()" class="btn btn-dark">
+              Polygon
+            </button>
+            <button onclick="switchToRectangleTool()" class="btn btn-dark">
+              Rectangle
+            </button>
+            <button onclick="switchToSquareTool()" class="btn btn-dark">
+              Square
+            </button>
+          </div>
+        </div>
+        <div class="container">
+          <h4 class="my-4">Load File</h4>
+          <div class="container">
+            <!-- <label class="form-label">Load file</label> -->
+            <input
+              class="form-control form-control-sm"
+              type="file"
+              id="load"
+              accept=".json,application/json"
+            />
+          </div>
+        </div>
+        <div class="container my-4">
+          <button id="save" class="btn btn-primary">Save</button>
+          <button id="clearCanvas" class="btn btn-danger">Clear Canvas</button>
+          <button
+            type="button"
+            class="btn btn-warning"
+            data-bs-toggle="modal"
+            data-bs-target="#exampleModal"
+          >
+            Help
+          </button>
+
+          <div
+            class="modal fade"
+            id="exampleModal"
+            tabindex="-1"
+            aria-labelledby="exampleModalLabel"
+            aria-hidden="true"
+          >
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabel">How to Use</h5>
+                  <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                  ></button>
+                </div>
+                <div class="modal-body">...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="engine.js"></script>
     <script src="classes.js"></script>
     <script src="app.js"></script>

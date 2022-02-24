@@ -396,6 +396,13 @@ class Rectangle extends Shape {
   }
 }
 
+/**
+ * Clear canvas button
+ */
+var cc = document.getElementById("clearCanvas");
+cc.addEventListener("click", function () {
+  location.reload();
+});
 class Tool {
   /* ABSTRACT CLASS, DON'T INSTANTIATE */
   /* Mother of all tools */
