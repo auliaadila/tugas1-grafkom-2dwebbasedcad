@@ -179,7 +179,7 @@ class Shape {
     /** @type Point[] */
     this.points = points;
     /** @type Color */
-    this.color = color;
+    this.color = new Color(color.red, color.green, color.blue);
     /** @type GLenum */
     this.GL_SHAPE = GL_SHAPE;
   }
@@ -194,9 +194,9 @@ class Shape {
       vertices.push(
         point.x,
         point.y,
-        this.color.red,
-        this.color.green,
-        this.color.blue
+        this.color.red / 255,
+        this.color.green / 255,
+        this.color.blue / 255
       );
     }
     this.gl.bufferData(
@@ -423,9 +423,9 @@ class Tool {
   /* Draws the current state */
   _drawCanvas() {
     this.gl.clearColor(
-      this.current.canvasColor.red,
-      this.current.canvasColor.green,
-      this.current.canvasColor.blue,
+      this.current.canvasColor.red / 255,
+      this.current.canvasColor.green / 255,
+      this.current.canvasColor.blue / 255,
       1
     );
     this.gl.clear(this.gl.COLOR_BUFFER_BIT);
@@ -461,7 +461,7 @@ class Tool {
    * (to be overidden by child classes)
    */
   resetTool() {
-    throw("Not implemented method: " + this.constructor.name + ".resetTool()'")
+    throw "Not implemented method: " + this.constructor.name + ".resetTool()'";
   }
 }
 
@@ -821,26 +821,38 @@ class TransformTool extends Tool {
       let vector = this.dragging.direction(this.getCursorPosition(e));
 
       /** Transformation vector needs to be adjusted if:
-       * - shape is a square, or 
+       * - shape is a square, or
        * - shift is pressed and shape is either line or rectangle
        * We use vector projection to do this
        */
-      if ((this.active.shape instanceof Square) || (e.shiftKey && ((this.active.shape instanceof Line) || (this.active.shape instanceof Rectangle)))) {
-        let oppositePointIndex = -1
+      if (
+        this.active.shape instanceof Square ||
+        (e.shiftKey &&
+          (this.active.shape instanceof Line ||
+            this.active.shape instanceof Rectangle))
+      ) {
+        let oppositePointIndex = -1;
         if (this.active.shape instanceof Line) {
           oppositePointIndex = (this.active.pointIndex + 1) % 2;
         } else {
           oppositePointIndex = (this.active.pointIndex + 2) % 4;
         }
-        let directionVector = new Vector((this.dragging.point.x - this.dragging.points[oppositePointIndex].x), (this.dragging.point.y - this.dragging.points[oppositePointIndex].y))
-        let magnitude = ((vector.x * directionVector.x) + (vector.y * directionVector.y)) / ((directionVector.x ** 2) + (directionVector.y ** 2))
-        vector.x = magnitude * directionVector.x
-        vector.y = magnitude * directionVector.y
+        let directionVector = new Vector(
+          this.dragging.point.x - this.dragging.points[oppositePointIndex].x,
+          this.dragging.point.y - this.dragging.points[oppositePointIndex].y
+        );
+        let magnitude =
+          (vector.x * directionVector.x + vector.y * directionVector.y) /
+          (directionVector.x ** 2 + directionVector.y ** 2);
+        vector.x = magnitude * directionVector.x;
+        vector.y = magnitude * directionVector.y;
 
         /* Final check when shape is a Square */
         if (this.active.shape instanceof Square) {
-          vector.x = Math.sign(vector.x) * Math.min(Math.abs(vector.x), Math.abs(vector.y))
-          vector.y = Math.sign(vector.y) * Math.abs(vector.x)
+          vector.x =
+            Math.sign(vector.x) *
+            Math.min(Math.abs(vector.x), Math.abs(vector.y));
+          vector.y = Math.sign(vector.y) * Math.abs(vector.x);
         }
       }
 
@@ -1105,7 +1117,6 @@ class RectangleTool extends Tool {
   clickListener(e) {
     if (this.isDrawing) {
       this.current.shapes.push(this.rectangle);
-      this.rectangle.draw();
       this.drawCanvas();
       this.resetTool();
     } else {
@@ -1125,13 +1136,12 @@ class RectangleTool extends Tool {
    */
   mouseMoveListener(e) {
     if (this.isDrawing) {
+      this.drawCanvas();
       this.rectangle = new Rectangle(
         this.gl,
         [this.rectangle.points[0], this.getCursorPosition(e)],
-        this,
         this.current.shapeColor
       );
-      this.drawCanvas();
       this.rectangle.draw();
     }
   }
@@ -1169,7 +1179,6 @@ class SquareTool extends Tool {
   clickListener(e) {
     if (this.isDrawing) {
       this.current.shapes.push(this.square);
-      this.square.draw();
       this.drawCanvas();
       this.resetTool();
     } else {
@@ -1189,13 +1198,12 @@ class SquareTool extends Tool {
    */
   mouseMoveListener(e) {
     if (this.isDrawing) {
+      this.drawCanvas();
       this.square = new Square(
         this.gl,
         [this.square.points[0], this.getCursorPosition(e)],
-        this,
         this.current.shapeColor
       );
-      this.drawCanvas();
       this.square.draw();
     }
   }

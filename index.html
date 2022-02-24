@@ -7,16 +7,19 @@
   </head>
   <body style="background-color: grey">
     <canvas id="webgl-app" width="640" height="640"></canvas>
+    <label for="shape-color">Shape Color</label>
     <input
       type="color"
       id="shape-color"
       value="#000000"
-      onchange="setShapeColor()"
-    />
+      oninput="setShapeColor()"
+      onchange="setShapeColor()"/>
+    <label for="canvas-color">Canvas Color</label>
     <input
       type="color"
       id="canvas-color"
       value="#ffffff"
+      oninput="setCanvasColor()"
       onchange="setCanvasColor()"
     />
     <button onclick="switchToSelectionTool()">Selection Tool</button>
