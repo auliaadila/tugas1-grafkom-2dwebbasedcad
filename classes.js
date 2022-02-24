@@ -1140,6 +1140,14 @@ class ResizeTool extends Tool {
   }
 
   /**
+   * Override drawCanvas
+   */
+  drawCanvas() {
+    this._drawCanvas();
+    this.drawSelectedShapeBorders();
+  }
+
+  /**
    * Reset .line and .isDrawing to default values
    */
   resetTool() {
@@ -1184,6 +1192,28 @@ class ResizeTool extends Tool {
     }
   }
 
+  drawSelectedShapeBorders() {
+    if (this.shape instanceof Shape) {
+      let color = new Color(125, 0, 125);
+      let borders = [];
+      for (let i = 0; i < this.shape.points.length; i += 1) {
+        borders.push(
+          new Line(
+            this.gl,
+            [
+              this.shape.points[i],
+              this.shape.points[(i + 1) % this.shape.points.length],
+            ],
+            color
+          )
+        );
+      }
+      for (let border of borders) {
+        border.draw();
+      }
+    }
+  }
+
   /**
    * Bind this to 'click' event
    * @param {MouseEvent} e
@@ -1195,7 +1225,6 @@ class ResizeTool extends Tool {
       this.shape.draw();
       this.drawCanvas();
       this.resetTool();
-
     } else {
       let point = this.getCursorPosition(e);
       this.getIndex(point);
