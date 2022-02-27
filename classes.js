@@ -287,12 +287,12 @@ class Shape {
    * @param {Point} point
    * @returns boolean
    */
-  contains(point) {
+  contains(point, radius) {
     return (
-      this.leftBoundary() <= point.x &&
-      this.rightBoundary() >= point.x &&
-      this.topBoundary() >= point.y &&
-      this.bottomBoundary() <= point.y
+      this.leftBoundary() - radius <= point.x &&
+      this.rightBoundary() + radius >= point.x &&
+      this.topBoundary() + radius >= point.y &&
+      this.bottomBoundary() - radius <= point.y
     );
   }
 }
@@ -488,6 +488,9 @@ class SelectionTool extends Tool {
    */
   constructor(canvas, gl, current) {
     super(canvas, gl, current);
+    /* Radius of a point */
+    /** @type number */
+    this.radius = 40 / this.canvas.width;
     /** @type Shape */
     this.activeShape = null;
     /** @type {{flag: boolean, origin: Point, points: Point[], offset(): Vector}} */
@@ -535,7 +538,7 @@ class SelectionTool extends Tool {
   getSelectedShape(e) {
     let selectedShape = null;
     for (let i = this.current.shapes.length - 1; i > -1; i -= 1) {
-      if (this.current.shapes[i].contains(this.getCursorPosition(e))) {
+      if (this.current.shapes[i].contains(this.getCursorPosition(e), this.radius)) {
         selectedShape = this.current.shapes[i];
         break;
       }
@@ -676,7 +679,7 @@ class TransformTool extends Tool {
     super(canvas, gl, current);
     /* Radius of a point */
     /** @type number */
-    this.radius = (20 / this.canvas.width) * 2;
+    this.radius = 40 / this.canvas.width;
     /** @type {{shape: Shape, point: Point, pointIndex: number}} */
     this.active = {
       shape: null,
@@ -726,7 +729,7 @@ class TransformTool extends Tool {
   getSelectedShape(e) {
     let selectedShape = null;
     for (let i = this.current.shapes.length - 1; i > -1; i -= 1) {
-      if (this.current.shapes[i].contains(this.getCursorPosition(e))) {
+      if (this.current.shapes[i].contains(this.getCursorPosition(e), this.radius)) {
         selectedShape = this.current.shapes[i];
         break;
       }
@@ -867,6 +870,10 @@ class TransformTool extends Tool {
           vector.y = Math.sign(vector.y) * Math.abs(vector.x);
         }
       }
+
+      /* Scale transformation vector, accounting for not 1:1 canvas */
+      vector.x *= Math.min(this.canvas.height, this.canvas.width) / this.canvas.width
+      vector.y *= Math.min(this.canvas.height, this.canvas.width) / this.canvas.height
 
       /* Translate the point */
       this.active.point.x = this.dragging.point.x + vector.x;
