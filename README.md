@@ -2,6 +2,8 @@
 
 Sebagai Bagian dari Tugas Besar 1 Mata Kuliah Grafika Komputer IF3260 pada Semester II Tahun Akademik 2021/2022
 
+Program tersedia pada [link](https://auliaadila.github.io/tugas1-grafkom-2dwebbasedcad/src/) berikut
+
 ## How to Draw
 
 1.  **Line**
