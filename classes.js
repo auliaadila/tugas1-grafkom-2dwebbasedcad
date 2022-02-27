@@ -167,8 +167,9 @@ class Shape {
    * @param {Point[]} points
    * @param {Color} color
    * @param {GLenum} GL_SHAPE
+   * @param {String} name
    */
-  constructor(gl, points, color, GL_SHAPE) {
+  constructor(gl, points, color, GL_SHAPE, name) {
     if (this.constructor === Shape) {
       throw new Error(
         'ERROR: Tidak bisa membuat objek dari kelas abstrak "Shape"'
@@ -182,6 +183,8 @@ class Shape {
     this.color = new Color(color.red, color.green, color.blue);
     /** @type GLenum */
     this.GL_SHAPE = GL_SHAPE;
+    /** @type String */
+    this.name = name;
   }
 
   /**
@@ -304,7 +307,7 @@ class Line extends Shape {
    * @param {Color} color
    */
   constructor(gl, points, color) {
-    super(gl, points, color, gl.LINE_STRIP);
+    super(gl, points, color, gl.LINE_STRIP, "Line");
   }
 }
 
@@ -318,7 +321,7 @@ class Polygon extends Shape {
    * @param {Color} color
    */
   constructor(gl, points, color) {
-    super(gl, points, color, gl.TRIANGLE_FAN);
+    super(gl, points, color, gl.TRIANGLE_FAN, "Polygon");
   }
 }
 
@@ -332,7 +335,7 @@ class Square extends Shape {
    * @param {Color} color
    */
   constructor(gl, points, color) {
-    super(gl, points, color, gl.TRIANGLE_FAN);
+    super(gl, points, color, gl.TRIANGLE_FAN, "Square");
     let leastWidth = Math.min(
       Math.abs(points[0].x - points[1].x),
       Math.abs(points[0].y - points[1].y)
@@ -387,7 +390,7 @@ class Rectangle extends Shape {
    * @param {Color} color
    */
   constructor(gl, points, color) {
-    super(gl, points, color, gl.TRIANGLE_FAN);
+    super(gl, points, color, gl.TRIANGLE_FAN, "Rectangle");
     this.newPoints = [
       new Point(points[0].x, points[0].y),
       new Point(points[0].x, points[1].y),
@@ -416,11 +419,11 @@ class Tool {
    * @param {{shapes: (Line|Polygon)[], shapeColor: Color, canvasColor: Color}} current
    */
   constructor(canvas, gl, current) {
-    if (this.constructor === Tool) {
-      throw new Error(
-        'ERROR: Tidak bisa membuat objek dari kelas abstrak "Tool"'
-      );
-    }
+    // if (this.constructor === Tool) {
+    //   throw new Error(
+    //     'ERROR: Tidak bisa membuat objek dari kelas abstrak "Tool"'
+    //   );
+    // }
     /** @type HTMLCanvasElement */
     this.canvas = canvas;
     /** @type WebGLRenderingContext */
